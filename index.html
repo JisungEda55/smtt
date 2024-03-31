@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Clock</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    .clock {
+        display: inline-block;
+        margin: 20px;
+        padding: 10px;
+        border: 2px solid #333;
+        border-radius: 10px;
+        background-color: #f0f0f0;
+    }
+</style>
+</head>
+<body>
+
+<div id="clocks">
+    <!-- 시계들이 여기에 동적으로 추가될 것입니다. -->
+</div>
+
+<script>
+// 주요 국가의 표준시를 나타내는 객체
+var timezones = [
+    { name: 'New York', offset: -5 },
+    { name: 'London', offset: 0 },
+    { name: 'Seoul', offset: 9 },
+    { name: 'Sydney', offset: 10 },
+    { name: 'Paris', offset: 1 },
+    { name: 'Berlin', offset: 1 },
+    { name: 'Moscow', offset: 3 },
+    { name: 'Beijing', offset: 8 },
+    { name: 'Dubai', offset: 4 },
+    { name: 'Los Angeles', offset: -8 }
+];
+
+// 시계를 표시하는 함수
+function displayClocks() {
+    var clocksDiv = document.getElementById('clocks');
+    clocksDiv.innerHTML = ''; // 기존 시계 제거
+
+    // 각 국가별로 시간 표시
+    timezones.forEach(function(zone) {
+        var clockDiv = document.createElement('div');
+        clockDiv.className = 'clock';
+        var time = new Date();
+        time.setHours(time.getHours() + zone.offset);
+        var timeString = time.toLocaleString('en-US', { timeZoneName: 'short', hour12: false });
+        clockDiv.textContent = zone.name + ': ' + timeString;
+        clocksDiv.appendChild(clockDiv);
+    });
+}
+
+// 페이지 로드시 시계 표시
+displayClocks();
+
+// 1분마다 시간 업데이트
+setInterval(displayClocks, 60 * 1000);
+</script>
+
+</body>
+</html>
