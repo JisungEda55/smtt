@@ -5,7 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multiple D-Day Widget</title>
 <style>
-    /* CSS 스타일은 생략합니다. */
+    @font-face {
+        font-family: 'TheJamsil';
+        font-weight: 800;
+        font-style: normal;
+        src: url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.eot');
+        src: url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.eot?#iefix') format('embedded-opentype'),
+             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.woff2') format('woff2'),
+             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.woff') format('woff'),
+             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.ttf') format('truetype');
+        font-display: swap;
+    }
+
+    body {
+        font-family: 'TheJamsil', sans-serif;
+        background-color: transparent;
+        font-size: 29px;
+    }
+
+    #countdown {
+        font-size: 24px;
+        text-align: center;
+        margin-top: 50px;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .d-day {
+        color: rgb(255, 59, 48);
+    }
+
+    .normal-text {
+        color: #fac000;
+    }
 </style>
 </head>
 <body>
@@ -13,54 +44,39 @@
 <div id="countdown"></div>
 
 <script>
-    // 디데이 목록이 정리된 파일의 링크
-    var jsonFileURL = 'https://github.com/JisungEda55/smtt/blob/main/DdayList.json';
-
-    // 디데이 목록을 저장할 배열
     var dDayList = [];
 
     // JSON 파일 불러오기
-    fetch(jsonFileURL)
+    fetch('https://github.com/JisungEda55/smtt/blob/main/DdayList.json')
     .then(response => response.json())
     .then(data => {
-        // 불러온 데이터를 디데이 목록에 저장
         dDayList = data;
-        // 디데이 목록을 날짜순으로 정렬
         dDayList.sort(function(a, b) {
             return new Date(a.date) - new Date(b.date);
         });
-        // 페이지 로드시 디데이 계산
-        getDday();
-        // 1초마다 업데이트
-        setInterval(getDday, 1000);
+        var currentIndex = 0;
+
+        function getDday() {
+            var dDay = dDayList[currentIndex];
+            var now = new Date();
+            var timeDiff = new Date(dDay.date) - now;
+            var days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            var dDayDate = new Date(dDay.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            var countdown = document.getElementById('countdown');
+            countdown.style.opacity = 0;
+            setTimeout(function() {
+                countdown.innerHTML = dDay.label + ': <span class="d-day">D-' + days + '</span><br>(' + dDayDate + ')';
+                countdown.style.opacity = 1;
+            }, 500);
+            currentIndex = (currentIndex + 1) % dDayList.length;
+        }
+
+        window.onload = function() {
+            setInterval(getDday, 1000);
+            getDday();
+        };
     })
     .catch(error => console.error('Error:', error));
-
-    // 현재 인덱스
-    var currentIndex = 0;
-
-    // 디데이 계산 함수
-    function getDday() {
-        // 현재 디데이
-        var dDay = dDayList[currentIndex];
-        // 현재 시간
-        var now = new Date();
-        // 두 날짜 사이의 시간 차이 계산
-        var timeDiff = new Date(dDay.date) - now;
-        // 남은 일수 계산
-        var days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-        // 디데이 날짜 형식으로 변환
-        var dDayDate = new Date(dDay.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        // 결과 출력
-        var countdown = document.getElementById('countdown');
-        countdown.style.opacity = 0;
-        setTimeout(function() {
-            countdown.innerHTML = dDay.label + ': <span class="d-day">D-' + days + '</span><br>(' + dDayDate + ')';
-            countdown.style.opacity = 1;
-        }, 500);
-        // 다음 디데이 인덱스로 이동
-        currentIndex = (currentIndex + 1) % dDayList.length;
-    }
 </script>
 
 </body>
