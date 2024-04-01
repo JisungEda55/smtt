@@ -6,25 +6,19 @@
 <title>Multiple D-Day Widget</title>
 <style>
     @font-face {
-        font-family: 'TheJamsil';
-        font-weight: 800;
+        font-family: 'DNFBitBitv2';
         font-style: normal;
-        src: url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.eot');
-        src: url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.eot?#iefix') format('embedded-opentype'),
-             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.woff2') format('woff2'),
-             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.woff') format('woff'),
-             url('https://cdn.jsdelivr.net/gh/webfontworld/TheJamsil/TheJamsil-ExtraBold.ttf') format('truetype');
-        font-display: swap;
+        font-weight: 400;
+        src: url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype');
     }
 
     body {
-        font-family: 'TheJamsil', sans-serif;
+        font-family: 'DNFBitBitv2', sans-serif;
         background-color: transparent;
-        font-size: 29px;
     }
 
     #countdown {
-        font-size: 24px;
+        font-size: 29px;
         text-align: center;
         margin-top: 50px;
         transition: opacity 0.5s ease-in-out;
@@ -33,9 +27,9 @@
     .d-day {
         color: rgb(255, 59, 48);
     }
-
-    .normal-text {
-        color: #fac000;
+    
+    .other-text {
+        color: rgb(28, 28, 30);
     }
 </style>
 </head>
@@ -44,39 +38,75 @@
 <div id="countdown"></div>
 
 <script>
-    var dDayList = [];
+    var dDayListUrl = 'https://raw.githubusercontent.com/JisungEda55/smtt/main/ddaylist.json';
 
-    // JSON 파일 불러오기
-    fetch('https://raw.githubusercontent.com/JisungEda55/smtt/main/DdayList.json')
-    .then(response => response.json())
-    .then(data => {
-        dDayList = data;
-        dDayList.sort(function(a, b) {
-            return new Date(a.date) - new Date(b.date);
-        });
-        var currentIndex = 0;
+    function getDdayList(callback) {
+        fetch(dDayListUrl)
+            .then(response => response.json())
+            .then(data => callback(data))
+            .catch(error => console.error('Error fetching d-day list:', error));
+    }
 
-        function getDday() {
+    var currentIndex = 0;
+
+    function getDday() {
+        getDdayList(function(dDayList) {
+            // 디데이 목록을 날짜순으로 정렬
+            dDayList.sort(function(a, b) {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            // 현재 디데이
             var dDay = dDayList[currentIndex];
-            var now = new Date();
-            var timeDiff = new Date(dDay.date) - now;
-            var days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-            var dDayDate = new Date(dDay.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            var countdown = document.getElementById('countdown');
-            countdown.style.opacity = 0;
-            setTimeout(function() {
-                countdown.innerHTML = dDay.label + ': <span class="d-day">D-' + days + '</span><br>(' + dDayDate + ')';
-                countdown.style.opacity = 1;
-            }, 500);
+            
+            // 현재 시간을 KST로 변환
+            var now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+            
+            // 디데이 날짜 형식으로 변환
+            var dDayDate = dDay.date.split('T')[0]; // 날짜만 필요하므로 T 이후 부분을 제거
+            
+            // 오늘과 디데이 사이의 시간 차이 계산 (단위: 일)
+            var timeDiff = Math.ceil((new Date(dDay.date) - now) / (1000 * 60 * 60 * 24));
+            
+            // 오늘이면
+            if (timeDiff === 0) {
+                var countdown = document.getElementById('countdown');
+                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
+                setTimeout(function() {
+                    countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">화이팅!</span><br>오늘이 그날!</span>';
+                    countdown.style.opacity = 1;
+                }, 500); // 0.5초 후에 텍스트 변경
+            } else if (timeDiff === 1) { // 내일이면
+                var countdown = document.getElementById('countdown');
+                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
+                setTimeout(function() {
+                    countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">내일!</span><br>(' + dDayDate + ')</span>';
+                    countdown.style.opacity = 1;
+                }, 500); // 0.5초 후에 텍스트 변경
+            } else { // 그 외의 경우
+                // 결과 출력
+                var countdown = document.getElementById('countdown');
+                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
+                setTimeout(function() {
+                    if (timeDiff > 0) {
+                        countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">D-' + timeDiff + '</span><br>(' + dDayDate + ')</span>';
+                    } else {
+                        countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">D+' + Math.abs(timeDiff) + '</span><br>(' + dDayDate + ')</span>';
+                    }
+                    countdown.style.opacity = 1;
+                }, 500); // 0.5초 후에 텍스트 변경
+            }
+            
+            // 다음 디데이 인덱스로 이동
             currentIndex = (currentIndex + 1) % dDayList.length;
-        }
+        });
+    }
 
-        window.onload = function() {
-            setInterval(getDday, 1000);
-            getDday();
-        };
-    })
-    .catch(error => console.error('Error:', error));
+    // 페이지 로드시 디데이 계산
+    window.onload = function() {
+        setInterval(getDday, 5*1000); // N*1초마다 업데이트
+        getDday(); // 초기 업데이트
+    };
 </script>
 
 </body>
