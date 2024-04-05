@@ -3,110 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multiple D-Day Widget</title>
+<title>똘똘똘이자요?</title>
 <style>
-    @font-face {
-        font-family: 'DNFBitBitv2';
-        font-style: normal;
-        font-weight: 400;
-        src: url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype');
-    }
-
-    body {
-        font-family: 'DNFBitBitv2', sans-serif;
-        background-color: transparent;
-    }
-
-    #countdown {
-        font-size: 29px;
-        text-align: center;
-        margin-top: 50px;
-        transition: opacity 0.5s ease-in-out;
-    }
-
-    .d-day {
-        color: rgb(255, 59, 48);
-    }
-    
-    .other-text {
-        color: rgb(28, 28, 30);
-    }
+  /* 스타일링 */
+  body {
+    font-family: Arial, sans-serif;
+    background-color: rgb(28, 28, 30); /* 배경색 설정 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 수직 가운데 정렬 */
+    align-items: center; /* 수평 가운데 정렬 */
+    height: 100vh; /* 화면 전체 높이로 설정 */
+    color: white; /* 텍스트 색상 설정 */
+  }
+  img {
+    max-width: 100%; /* 이미지의 최대 너비 설정 */
+    max-height: 100%; /* 이미지의 최대 높이 설정 */
+  }
+  .loading {
+    font-size: 20px;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
-<div id="countdown"></div>
+<!-- "밤송이 확인창" 텍스트 -->
+<h1>밤송이 상태</h1>
+
+<!-- GIF 이미지 -->
+<img id="gifImage" src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d5a97c24250446b5b0970f565b74c65b/animated/light/2.0" alt="GIF Image">
+
+<!-- 로딩 상태 -->
+<div id="loadingStatus" class="loading" style="display: none;">Loading...</div>
 
 <script>
-    var dDayListUrl = 'https://raw.githubusercontent.com/JisungEda55/smtt/main/ddaylist.json';
+  // 방송 상태 확인 함수
+  function checkBroadcastStatus() {
+    var gifImage = document.getElementById('gifImage');
+    var loadingStatus = document.getElementById('loadingStatus');
 
-    function getDdayList(callback) {
-        fetch(dDayListUrl)
-            .then(response => response.json())
-            .then(data => callback(data))
-            .catch(error => console.error('Error fetching d-day list:', error));
-    }
+    // 로딩 상태 표시
+    loadingStatus.style.display = 'block';
 
-    var currentIndex = 0;
+    // API를 통해 채널 상태를 가져옴
+    fetch('https://api.chzzk.naver.com/service/v1/channels/1906dd57f578c255feca54700bcccfc9')
+      .then(response => response.json())
+      .then(data => {
+        // API 응답에서 방송 상태를 확인하고 처리
+        var isOpen = data.openLive;
 
-    function getDday() {
-        getDdayList(function(dDayList) {
-            // 디데이 목록을 날짜순으로 정렬
-            dDayList.sort(function(a, b) {
-                return new Date(a.date) - new Date(b.date);
-            });
+        if (isOpen) {
+          gifImage.src = "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_561acd36f7bb44f6955d7bf1b60c1eba/animated/light/2.0";
+        } else {
+          gifImage.src = "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d5a97c24250446b5b0970f565b74c65b/animated/light/2.0";
+        }
 
-            // 현재 디데이
-            var dDay = dDayList[currentIndex];
-            
-            // 현재 시간을 KST로 변환
-            var now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-            
-            // 디데이 날짜 형식으로 변환
-            var dDayDate = dDay.date.split('T')[0]; // 날짜만 필요하므로 T 이후 부분을 제거
-            
-            // 오늘과 디데이 사이의 시간 차이 계산 (단위: 일)
-            var timeDiff = Math.ceil((new Date(dDay.date) - now) / (1000 * 60 * 60 * 24));
-            
-            // 오늘이면
-            if (timeDiff === 0) {
-                var countdown = document.getElementById('countdown');
-                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
-                setTimeout(function() {
-                    countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">화이팅!</span><br>오늘이 그날!</span>';
-                    countdown.style.opacity = 1;
-                }, 500); // 0.5초 후에 텍스트 변경
-            } else if (timeDiff === 1) { // 내일이면
-                var countdown = document.getElementById('countdown');
-                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
-                setTimeout(function() {
-                    countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">내일!</span><br>(' + dDayDate + ')</span>';
-                    countdown.style.opacity = 1;
-                }, 500); // 0.5초 후에 텍스트 변경
-            } else { // 그 외의 경우
-                // 결과 출력
-                var countdown = document.getElementById('countdown');
-                countdown.style.opacity = 0; // 텍스트가 부드럽게 전환되도록 opacity를 0으로 설정
-                setTimeout(function() {
-                    if (timeDiff > 0) {
-                        countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">D-' + timeDiff + '</span><br>(' + dDayDate + ')</span>';
-                    } else {
-                        countdown.innerHTML = '<span class="other-text">' + dDay.label + ': <span class="d-day">D+' + Math.abs(timeDiff) + '</span><br>(' + dDayDate + ')</span>';
-                    }
-                    countdown.style.opacity = 1;
-                }, 500); // 0.5초 후에 텍스트 변경
-            }
-            
-            // 다음 디데이 인덱스로 이동
-            currentIndex = (currentIndex + 1) % dDayList.length;
-        });
-    }
+        // 로딩 상태 숨김
+        loadingStatus.style.display = 'none';
+      })
+      .catch(error => {
+        console.error('Error fetching broadcast status:', error);
+        // 로딩 상태 숨김
+        loadingStatus.style.display = 'none';
+      });
+  }
 
-    // 페이지 로드시 디데이 계산
-    window.onload = function() {
-        setInterval(getDday, 5*1000); // N*1초마다 업데이트
-        getDday(); // 초기 업데이트
-    };
+  // 페이지 로드 후 초기 방송 상태 확인
+  checkBroadcastStatus();
+
+  // 방송 상태를 주기적으로 확인하여 GIF 이미지 갱신
+  setInterval(checkBroadcastStatus, 60000); // 1분마다 확인
 </script>
 
 </body>
